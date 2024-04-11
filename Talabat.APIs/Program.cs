@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Talabat.Repository.Data;
+using Talabat.Core.Repositories.Contract;
+using Talabat.Repository;
 
 namespace Talabat.APIs
 {
@@ -24,8 +26,10 @@ namespace Talabat.APIs
 
 			webApplicationBuilder.Services.AddDbContext<StoreContext>(options =>
 			{
-				options.UseSqlServer(webApplicationBuilder.Configuration.GetConnectionString("DefaultConnection")); //Connection String
+				options.UseSqlServer(webApplicationBuilder.Configuration.GetConnectionString("DefaultConnection")).UseLazyLoadingProxies(); //Connection String
 			});
+
+			webApplicationBuilder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 			#endregion
 
