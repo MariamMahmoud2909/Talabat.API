@@ -23,5 +23,6 @@ namespace Talabat.APIs.Controllers
 
 			return Ok(products);
 		}
+
 	}
 }
