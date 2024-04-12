@@ -35,6 +35,8 @@ namespace Talabat.APIs
 
 			var app = webApplicationBuilder.Build(); // Web Application
 
+			#region Update-Database
+
 			using var scope = app.Services.CreateScope();
 
 			var services = scope.ServiceProvider;
@@ -53,6 +55,7 @@ namespace Talabat.APIs
 				var logger = loggerFactory.CreateLogger<Program>();
 				logger.LogError(ex, "an error has been occured during apply the migration");
 			}
+			#endregion
 
 			#region Configure Kestrel Middlewares
 			// Configure the HTTP request pipeline. [Middleware]
