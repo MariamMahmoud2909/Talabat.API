@@ -8,6 +8,7 @@ using Talabat.Core.Entities;
 
 namespace Talabat.Core.Specifications
 {
+    //Container for common code
     public class BaseSpecifications<T> : ISpecifications<T> where T : BaseEntity
     {
         public Expression<Func<T, bool>>? Criteria { get; set; }
