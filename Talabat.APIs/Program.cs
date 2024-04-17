@@ -4,6 +4,8 @@ using Talabat.Repository.Data;
 using Talabat.Core.Repositories.Contract;
 using Talabat.Repository;
 using Talabat.APIs.Helpers;
+using Microsoft.AspNetCore.Mvc;
+using Talabat.APIs.Errors;
 
 namespace Talabat.APIs
 {
@@ -33,6 +35,21 @@ namespace Talabat.APIs
 			webApplicationBuilder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 			webApplicationBuilder.Services.AddAutoMapper(typeof(MappingProfiles));
+
+			webApplicationBuilder.Services.Configure<ApiBehaviorOptions>(options =>
+			{
+				options.InvalidModelStateResponseFactory = (actionContext) =>
+				{
+					var errors = actionContext.ModelState
+												   .Where(P => P.Value.Errors.Count > 0)
+												   .SelectMany(P => P.Value.Errors)
+												   .Select(E => E.ErrorMessage)
+												   .ToList();
+					var response = new ApiValidationErrorResponse() { Errors = errors };
+					return new BadRequestObjectResult(response);
+				};
+			});
+
 			#endregion
 
 			var app = webApplicationBuilder.Build(); // Web Application
@@ -55,7 +72,7 @@ namespace Talabat.APIs
 			catch (Exception ex)
 			{
 				var logger = loggerFactory.CreateLogger<Program>();
-				logger.LogError(ex, "an error has been occured during apply the migration");
+				logger.LogError(ex, "an error has occured during apply the migration");
 			}
 			#endregion
 
