@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Talabat.Core.Entities;
-using Talabat.Core.Specifications;
 using Microsoft.EntityFrameworkCore.Query;
+using Talabat.Core.Specifications;
 
 namespace Talabat.Repository
 {
-	internal static class SpecificationsEvaluator<T> where T : BaseEntity
+    internal static class SpecificationsEvaluator<T> where T : BaseEntity
 	{
 		public static IQueryable<T> GetQuery(IQueryable<T> inputQuery, ISpecifications<T> spec)
 		{
