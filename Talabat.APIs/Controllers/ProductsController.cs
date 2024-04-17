@@ -6,6 +6,7 @@ using Talabat.Core.Specifications.ProductSpecs;
 using Talabat.Core.Specifications;
 using AutoMapper;
 using Talabat.APIs.Dtos;
+using Talabat.APIs.Errors;
 
 namespace Talabat.APIs.Controllers
 {
@@ -33,7 +34,7 @@ namespace Talabat.APIs.Controllers
 			var product = await _productsRepo.GetWithSpecAsync(spec);
 			if (product is null)
 			{
-				return NotFound(new ApiResponse(404));
+				return NotFound(new ApiResponse(404)); // 404
 			}
 			return Ok(_mapper.Map<Product, ProductToReturnDto>(product)); //200
 		}
