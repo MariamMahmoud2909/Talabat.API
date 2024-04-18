@@ -4,19 +4,18 @@ using Talabat.APIs.Errors;
 
 namespace Talabat.APIs.Middlewares
 {
-	public class ExceptionMiddleware
+	public class ExceptionMiddleware : IMiddleware
 	{
 		private readonly RequestDelegate _next;
 		private readonly ILogger<ExceptionMiddleware> _logger;
 		private readonly IWebHostEnvironment _env;
 
-		public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger, IWebHostEnvironment env)
+		public ExceptionMiddleware(ILogger<ExceptionMiddleware> logger, IWebHostEnvironment env)
 		{
-			_next = next;
 			_logger = logger;
 			_env = env;
 		}
-		public async Task InvokeAsync(HttpContext httpContext)
+		public async Task InvokeAsync(HttpContext httpContext, RequestDelegate _next)
 		{
 			try
 			{
