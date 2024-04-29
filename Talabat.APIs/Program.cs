@@ -31,14 +31,21 @@ namespace Talabat.APIs
 			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 			webApplicationBuilder.Services.AddEndpointsApiExplorer();
 			webApplicationBuilder.Services.AddSwaggerService();
-			// Register services required to document APIs [automatically using swagger]
+            // Register services required to document APIs [automatically using swagger]
 
-			webApplicationBuilder.Services.AddDbContext<StoreContext>(options =>
+            webApplicationBuilder.Services.AddApplicationsService();
+
+            webApplicationBuilder.Services.AddDbContext<StoreContext>(options =>
 			{
 				options.UseSqlServer(webApplicationBuilder.Configuration.GetConnectionString("DefaultConnection"))/*.UseLazyLoadingProxies()*/; //Connection String
 			});
 
-			webApplicationBuilder.Services.AddSingleton<IConnectionMultiplexer>((serviceProvider) =>
+            webApplicationBuilder.Services.AddDbContext<ApplicationIdentityDbContext>(options =>
+            {
+                options.UseSqlServer(webApplicationBuilder.Configuration.GetConnectionString("IdentityConnection"));
+            });
+
+            webApplicationBuilder.Services.AddSingleton<IConnectionMultiplexer>((serviceProvider) =>
 			{
 				var connection = webApplicationBuilder.Configuration.GetConnectionString("Redis");
 				return ConnectionMultiplexer.Connect(connection);
@@ -58,7 +65,9 @@ namespace Talabat.APIs
 
 			var _dbContext = services.GetRequiredService<StoreContext>(); // Ask CLR for creating object from DbContext Class Explicitly
 
-			var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+            var _identityDbContext = services.GetRequiredService<ApplicationIdentityDbContext>();
+
+            var loggerFactory = services.GetRequiredService<ILoggerFactory>();
 
 			var logger = loggerFactory.CreateLogger<Program>();
 
@@ -66,7 +75,9 @@ namespace Talabat.APIs
 			{
 				await _dbContext.Database.MigrateAsync(); //Update-Database [To Build the database on deploying and running the project]
 				await StoreContextSeed.SeedAsync(_dbContext);
-			}
+
+                await _identityDbContext.Database.MigrateAsync();
+            }
 			catch (Exception ex)
 			{
 				logger.LogError(ex, "An Error has occured during apply the migration");

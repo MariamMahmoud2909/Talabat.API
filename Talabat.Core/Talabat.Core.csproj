@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <Folder Include="Services.Contract\" />
+	  <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.23" />
   </ItemGroup>
 
   <ItemGroup>
