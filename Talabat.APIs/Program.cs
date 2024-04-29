@@ -12,6 +12,9 @@ using System.Net;
 using System.Text.Json;
 using Talabat.APIs.Extensions;
 using StackExchange.Redis;
+using Talabat.Repository.Identity;
+using Microsoft.AspNetCore.Identity;
+using Talabat.Core.Identity;
 
 namespace Talabat.APIs
 {
@@ -51,8 +54,9 @@ namespace Talabat.APIs
 				return ConnectionMultiplexer.Connect(connection);
 			}
 			);
+			webApplicationBuilder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationIdentityDbContext>();
 
-			webApplicationBuilder.Services.AddApplicationsService();
+            webApplicationBuilder.Services.AddApplicationsService();
 			#endregion
 
 			var app = webApplicationBuilder.Build(); // Web Application
@@ -77,6 +81,9 @@ namespace Talabat.APIs
 				await StoreContextSeed.SeedAsync(_dbContext);
 
                 await _identityDbContext.Database.MigrateAsync();
+
+                var _userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+                await ApplicationIdentityDbContextSeed.SeedUsersAsync(_userManager);
             }
 			catch (Exception ex)
 			{
