@@ -8,6 +8,7 @@ using AutoMapper;
 using Talabat.APIs.Dtos;
 using Talabat.APIs.Errors;
 using Talabat.APIs.Helpers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Talabat.APIs.Controllers
 {
@@ -42,7 +43,8 @@ namespace Talabat.APIs.Controllers
 		}
 
 		[HttpGet]
-		public async Task<ActionResult<Pagination<ProductToReturnDto>>> GetProducts([FromQuery] ProductSpecParams specParams)
+        [Authorize()]
+        public async Task<ActionResult<Pagination<ProductToReturnDto>>> GetProducts([FromQuery] ProductSpecParams specParams)
 		{
 			var spec = new ProductWithBrandAndCategorySpecifications(specParams);
 			var products = await _productsRepo.GetAllWithSpecAsync(spec);

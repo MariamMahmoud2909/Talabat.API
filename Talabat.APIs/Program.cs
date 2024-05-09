@@ -12,6 +12,11 @@ using System.Net;
 using System.Text.Json;
 using Talabat.APIs.Extensions;
 using StackExchange.Redis;
+using Talabat.Repository.Identity;
+using Microsoft.AspNetCore.Identity;
+using Talabat.Core.Identity;
+using Talabat.Core.Services.Contract;
+using Talabat.Service.AuthService;
 
 namespace Talabat.APIs
 {
@@ -25,30 +30,44 @@ namespace Talabat.APIs
 			#region Configure Services
 			// Add services to the Dependency Injection container.
 
-			webApplicationBuilder.Services.AddControllers();
-			// Register the required web API services to the DI Container
+			webApplicationBuilder.Services.AddControllers().AddNewtonsoftJson(options =>
+            {
+                options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+            });
+            // Register the required web API services to the DI Container
 
-			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-			webApplicationBuilder.Services.AddEndpointsApiExplorer();
+            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            webApplicationBuilder.Services.AddEndpointsApiExplorer();
 			webApplicationBuilder.Services.AddSwaggerService();
-			// Register services required to document APIs [automatically using swagger]
+            // Register services required to document APIs [automatically using swagger]
 
-			webApplicationBuilder.Services.AddDbContext<StoreContext>(options =>
+            webApplicationBuilder.Services.AddApplicationsService();
+
+            webApplicationBuilder.Services.AddDbContext<StoreContext>(options =>
 			{
 				options.UseSqlServer(webApplicationBuilder.Configuration.GetConnectionString("DefaultConnection"))/*.UseLazyLoadingProxies()*/; //Connection String
 			});
 
-			webApplicationBuilder.Services.AddSingleton<IConnectionMultiplexer>((serviceProvider) =>
+            webApplicationBuilder.Services.AddDbContext<ApplicationIdentityDbContext>(options =>
+            {
+                options.UseSqlServer(webApplicationBuilder.Configuration.GetConnectionString("IdentityConnection"));
+            });
+
+            webApplicationBuilder.Services.AddSingleton<IConnectionMultiplexer>((serviceProvider) =>
 			{
 				var connection = webApplicationBuilder.Configuration.GetConnectionString("Redis");
 				return ConnectionMultiplexer.Connect(connection);
 			}
 			);
+			webApplicationBuilder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationIdentityDbContext>();
 
-			webApplicationBuilder.Services.AddApplicationsService();
-			#endregion
+            webApplicationBuilder.Services.AddApplicationsService();
+			
+			webApplicationBuilder.Services.AddAuthServices(webApplicationBuilder.Configuration);
 
-			var app = webApplicationBuilder.Build(); // Web Application
+            #endregion
+
+            var app = webApplicationBuilder.Build(); // Web Application
 
 			#region Update-Database
 
@@ -58,7 +77,9 @@ namespace Talabat.APIs
 
 			var _dbContext = services.GetRequiredService<StoreContext>(); // Ask CLR for creating object from DbContext Class Explicitly
 
-			var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+            var _identityDbContext = services.GetRequiredService<ApplicationIdentityDbContext>();
+
+            var loggerFactory = services.GetRequiredService<ILoggerFactory>();
 
 			var logger = loggerFactory.CreateLogger<Program>();
 
@@ -66,7 +87,12 @@ namespace Talabat.APIs
 			{
 				await _dbContext.Database.MigrateAsync(); //Update-Database [To Build the database on deploying and running the project]
 				await StoreContextSeed.SeedAsync(_dbContext);
-			}
+
+                await _identityDbContext.Database.MigrateAsync();
+
+                var _userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+                await ApplicationIdentityDbContextSeed.SeedUsersAsync(_userManager);
+            }
 			catch (Exception ex)
 			{
 				logger.LogError(ex, "An Error has occured during apply the migration");
