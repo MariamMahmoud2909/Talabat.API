@@ -50,8 +50,6 @@ namespace Talabat.APIs
                 options.UseSqlServer(webApplicationBuilder.Configuration.GetConnectionString("IdentityConnection"));
             });
 
-            webApplicationBuilder.Services.AddScoped(typeof(IAuthService), typeof(AuthService));
-
             webApplicationBuilder.Services.AddSingleton<IConnectionMultiplexer>((serviceProvider) =>
 			{
 				var connection = webApplicationBuilder.Configuration.GetConnectionString("Redis");
@@ -61,9 +59,12 @@ namespace Talabat.APIs
 			webApplicationBuilder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationIdentityDbContext>();
 
             webApplicationBuilder.Services.AddApplicationsService();
-			#endregion
+			
+			webApplicationBuilder.Services.AddAuthServices(webApplicationBuilder.Configuration);
 
-			var app = webApplicationBuilder.Build(); // Web Application
+            #endregion
+
+            var app = webApplicationBuilder.Build(); // Web Application
 
 			#region Update-Database
 
