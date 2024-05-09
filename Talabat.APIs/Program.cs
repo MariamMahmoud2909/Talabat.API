@@ -30,11 +30,14 @@ namespace Talabat.APIs
 			#region Configure Services
 			// Add services to the Dependency Injection container.
 
-			webApplicationBuilder.Services.AddControllers();
-			// Register the required web API services to the DI Container
+			webApplicationBuilder.Services.AddControllers().AddNewtonsoftJson(options =>
+            {
+                options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+            });
+            // Register the required web API services to the DI Container
 
-			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-			webApplicationBuilder.Services.AddEndpointsApiExplorer();
+            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            webApplicationBuilder.Services.AddEndpointsApiExplorer();
 			webApplicationBuilder.Services.AddSwaggerService();
             // Register services required to document APIs [automatically using swagger]
 
