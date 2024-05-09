@@ -15,6 +15,8 @@ using StackExchange.Redis;
 using Talabat.Repository.Identity;
 using Microsoft.AspNetCore.Identity;
 using Talabat.Core.Identity;
+using Talabat.Core.Services.Contract;
+using Talabat.Service.AuthService;
 
 namespace Talabat.APIs
 {
@@ -47,6 +49,8 @@ namespace Talabat.APIs
             {
                 options.UseSqlServer(webApplicationBuilder.Configuration.GetConnectionString("IdentityConnection"));
             });
+
+            webApplicationBuilder.Services.AddScoped(typeof(IAuthService), typeof(AuthService));
 
             webApplicationBuilder.Services.AddSingleton<IConnectionMultiplexer>((serviceProvider) =>
 			{
