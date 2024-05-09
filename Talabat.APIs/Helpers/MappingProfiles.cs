@@ -10,10 +10,10 @@ namespace Talabat.APIs.Helpers
 		public MappingProfiles()
 		{
 			//for member : destination , mapfrom : source
-			CreateMap<Product, ProductToReturnDto>().ForMember(p => p.Brand, O => O.MapFrom(s => s.Brand.Name))
+			CreateMap<Product, ProductToReturnDto>().ForMember(p => p.Brand, O => O.MapFrom(s => s.Brand.Name));
 			CreateMap<CustomerBasketDto, CustomerBasket>();
 			CreateMap<BasketItemDto, BasketItem>();
-            CreateMap<Address, AddressDto>();
+            CreateMap<Address, AddressDto>().ReverseMap();
         }
 	}
 }
