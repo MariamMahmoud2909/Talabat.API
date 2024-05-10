@@ -22,7 +22,12 @@ namespace Talabat.Repository.Data.Configurations.Order_Config
                    );
 
             builder.HasOne(O => O.DeliveryMethod)
-                   .WithMany();
+                    .WithMany()
+                   .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasMany(O => O.Items)
+                   .WithOne()
+                   .OnDelete(DeleteBehavior.Cascade);
 
             builder.Property(O => O.SubTotal)
                     .HasColumnType("decimal(12,2)");
