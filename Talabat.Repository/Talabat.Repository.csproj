@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Data\Configurations\" />
     <Folder Include="Data\DataSeed\" />
     <Folder Include="Identity\Config\" />
     <Folder Include="Identity\DataSeed\" />
