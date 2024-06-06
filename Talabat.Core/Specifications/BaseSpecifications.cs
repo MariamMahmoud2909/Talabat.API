@@ -8,19 +8,19 @@ using Talabat.Core.Entities;
 
 namespace Talabat.Core.Specifications
 {
-    //Container for common code
-    public class BaseSpecifications<T> : ISpecifications<T> where T : BaseEntity
-    {
-        public Expression<Func<T, bool>>? Criteria { get; set; }
-        public List<Expression<Func<T, object>>> Includes { get; set; } = new List<Expression<Func<T, object>>>();
-		public Expression<Func<T, object>> OrderBy { get; set; } = null;
-		public Expression<Func<T, object>> OrderByDesc { get; set; } = null;
+	public class BaseSpecifications<T> : ISpecifications<T> where T : BaseEntity
+	{
+		public Expression<Func<T , bool>>? Criteria { get; set; }
+		public List<Expression<Func<T, object>>> Includes { get; set; } = new List<Expression<Func<T, object>>> ();
+		public Expression<Func<T, object>> OrderBy { get; set; }
+		public Expression<Func<T, object>> OrderByDesc { get; set; }
 		public int Skip { get; set; }
 		public int Take { get; set; }
 		public bool IsPaginationEnabled { get; set; }
+
 		public BaseSpecifications()
         {
-
+            
         }
 
         public BaseSpecifications(Expression<Func<T, bool>>? criteriaExpression)
@@ -28,15 +28,16 @@ namespace Talabat.Core.Specifications
             Criteria = criteriaExpression;
         }
 
-		public void AddOrderBy(Expression<Func<T, object>> orderByExpression)
-		{
-			OrderBy = orderByExpression;
-		}
+        public void AddOrderBy(Expression<Func<T,object>> orderByExpression)
+        {
+            OrderBy = orderByExpression;
+        }
 		public void AddOrderByDesc(Expression<Func<T, object>> orderByDescExpression)
 		{
 			OrderByDesc = orderByDescExpression;
 		}
-		public void ApplyPagination(int skip, int take)
+
+		public void ApplyPagination(int skip , int take)
 		{
 			IsPaginationEnabled = true;
 			Skip = skip;

@@ -5,6 +5,8 @@ namespace Talabat.APIs.Helpers
 	public class Pagination<T>
 	{
 		private IReadOnlyList<ProductToReturnDto> data;
+
+
 		public int PageIndex { get; set; }
 		public int PageSize { get; set; }
 		public int Count { get; set; }

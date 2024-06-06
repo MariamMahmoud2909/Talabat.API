@@ -1,125 +1,125 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Security.Claims;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Talabat.APIs.Dtos;
 using Talabat.APIs.Errors;
+using Talabat.APIs.Extensions;
 using Talabat.Core.Identity;
 using Talabat.Core.Services.Contract;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Talabat.APIs.Extensions;
-using AutoMapper;
 
 namespace Talabat.APIs.Controllers
 {
-    public class AccountController : BaseApiController
-    {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly IAuthService _authService;
-        private readonly IMapper _mapper;
+	public class AccountController : BaseApiController
+	{
+		private readonly UserManager<ApplicationUser> _userManager;
+		private readonly SignInManager<ApplicationUser> _signInManager;
+		private readonly IAuthService _authService;
+		private readonly IMapper _mapper;
 
-        public AccountController(
-            UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager,
-            IAuthService authService,
-            IMapper mapper)
-        {
-            _userManager = userManager;
-            _signInManager = signInManager;
-            _authService = authService;
-            _mapper = mapper;
-        }
+		public AccountController(
+			UserManager<ApplicationUser> userManager,
+			SignInManager<ApplicationUser> signInManager,
+			IAuthService authService,
+			IMapper mapper)
+		{
+			_userManager = userManager;
+			_signInManager = signInManager;
+			_authService = authService;
+			_mapper = mapper;
+		}
 
-        [HttpPost("login")]
-        public async Task<ActionResult<UserDto>> Login(LoginDto model)
-        {
-            var user = await _userManager.FindByEmailAsync(model.Email);
+		[HttpPost("login")]
+		public async Task<ActionResult<UserDto>> Login(LoginDto model)
+		{
+			var user = await _userManager.FindByEmailAsync(model.Email);
 
-            if (user == null)
-                return Unauthorized(new ApiResponse(401, "invalid login"));
+			if (user == null)
+				return Unauthorized(new ApiResponse(401, "invalid login"));
 
-            var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
+			var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
 
-            if (!result.Succeeded)
-                return Unauthorized(new ApiResponse(401, "invalid login"));
+			if (!result.Succeeded)
+				return Unauthorized(new ApiResponse(401, "invalid login"));
 
-            return Ok(new UserDto()
-            {
-                DisplayName = user.DisplayName,
-                Email = user.Email,
-                Token = await _authService.CreateTokenAsync(user, _userManager)
-            });
-        }
+			return Ok(new UserDto()
+			{
+				DisplayName = user.DisplayName,
+				Email = user.Email,
+				Token = await _authService.CreateTokenAsync(user, _userManager)
+			});
 
-        [HttpPost("register")]
-        public async Task<ActionResult<UserDto>> Register(RegisterDto model)
-        {
-            var user = new ApplicationUser()
-            {
-                DisplayName = model.DisplayName,
-                Email = model.Email,
-                UserName = model.Email.Split('@')[0],
-                PhoneNumber = model.Phone
-            };
+		}
 
-            var result = await _userManager.CreateAsync(user, model.Password);
+		[HttpPost("register")]
+		public async Task<ActionResult<UserDto>> Register(RegisterDto model)
+		{
+			var user = new ApplicationUser()
+			{
+				DisplayName = model.DisplayName,
+				Email = model.Email,
+				UserName = model.Email.Split('@')[0],
+				PhoneNumber = model.Phone
+			};
 
-            if (!result.Succeeded)
-                return BadRequest(new ApiValidationErrorResponse() { Errors = result.Errors.Select((E) => E.Description) });
+			var result = await _userManager.CreateAsync(user, model.Password);
 
-            return Ok(new UserDto()
-            {
-                DisplayName = user.DisplayName,
-                Email = user.Email,
-                Token = await _authService.CreateTokenAsync(user, _userManager)
-            });
-        }
+			if (!result.Succeeded)
+				return BadRequest(new ApiValidationErrorResponse() { Errors = result.Errors.Select((E) => E.Description) });
 
-        [Authorize]
-        [HttpGet]
-        public async Task<ActionResult<UserDto>> GetCurrentUser()
-        {
-            var email = User.FindFirstValue(ClaimTypes.Email);
+			return Ok(new UserDto()
+			{
+				DisplayName = user.DisplayName,
+				Email = user.Email,
+				Token = await _authService.CreateTokenAsync(user, _userManager)
+			});
+		}
 
-            var user = await _userManager.FindByEmailAsync(email);
+		[Authorize]
+		[HttpGet]
+		public async Task<ActionResult<UserDto>> GetCurrentUser()
+		{
+			var email = User.FindFirstValue(ClaimTypes.Email);
 
-            return Ok(new UserDto()
-            {
-                DisplayName = user?.DisplayName ?? string.Empty,
-                Email = user?.Email ?? string.Empty,
-                Token = await _authService.CreateTokenAsync(user, _userManager)
-            });
-        }
+			var user = await _userManager.FindByEmailAsync(email);
 
-        [Authorize]
-        [HttpGet("address")]
-        public async Task<ActionResult<AddressDto>> GetUserAddress()
-        {
-            var user = await _userManager.FindUserWithAddressAsync(User);
+			return Ok(new UserDto()
+			{
+				DisplayName = user?.DisplayName ?? string.Empty,
+				Email = user?.Email ?? string.Empty,
+				Token = await _authService.CreateTokenAsync(user, _userManager)
+			});
+		}
 
-            return Ok(_mapper.Map<AddressDto>(user.Address));
-        }
+		[Authorize]
+		[HttpGet("address")]
+		public async Task<ActionResult<AddressDto>> GetUserAddress()
+		{
+			var user = await _userManager.FindUserWithAddressAsync(User);
 
-        [Authorize]
-        [HttpPut("address")]
-        public async Task<ActionResult<AddressDto>> UpdateUserAddress(AddressDto address)
-        {
-            var updatedAddress = _mapper.Map<Address>(address);
+			return Ok(_mapper.Map<AddressDto>(user.Address));
+		}
 
-            var user = await _userManager.FindUserWithAddressAsync(User);
+		[Authorize]
+		[HttpPut("address")]
+		public async Task<ActionResult<AddressDto>> UpdateUserAddress(AddressDto address)
+		{
+			var updatedAddress = _mapper.Map<Address>(address);
 
-            //if (user.Address?.Id is not null)
-            updatedAddress.Id = user.Address.Id;
+			var user = await _userManager.FindUserWithAddressAsync(User);
 
-            user.Address = updatedAddress;
+			//if (user.Address?.Id is not null)
+			updatedAddress.Id = user.Address.Id;
 
-            var result = await _userManager.UpdateAsync(user);
+			user.Address = updatedAddress;
 
-            if (!result.Succeeded) return BadRequest(new ApiValidationErrorResponse() { Errors = result.Errors.Select(E => E.Description) });
+			var result = await _userManager.UpdateAsync(user);
 
-            return Ok(address);
-        }
-    }
+			if (!result.Succeeded) return BadRequest(new ApiValidationErrorResponse() { Errors = result.Errors.Select(E => E.Description) });
+
+			return Ok(address);
+		}
+	}
 }
