@@ -4,26 +4,18 @@ using Talabat.APIs.Errors;
 
 namespace Talabat.APIs.Controllers
 {
-	[Route("errors/{code}")]
+	[Route("[controller]/{code}")]
 	[ApiController]
 	[ApiExplorerSettings(IgnoreApi = true)]
 	public class ErrorsController : ControllerBase
 	{
-
+		[HttpGet]
 		public ActionResult Error(int code)
 		{
-			if (code == 401)
-			{
-				return Unauthorized(new ApiResponse(401));
-			}
-			else if (code == 404)
-			{
-				return NotFound(new ApiResponse(404));
-			}
-			else
-			{
-				return StatusCode(code);
-			}
+			if (code == 401 || code == 404)
+				return NotFound(new ApiResponse(code));
+
+			return StatusCode(code);
 		}
 	}
 }

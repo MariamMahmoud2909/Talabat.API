@@ -1,78 +1,94 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Talabat.APIs.Errors;
 using Talabat.APIs.Helpers;
 using Talabat.APIs.Middlewares;
-using Talabat.Core;
 using Talabat.Core.Repositories.Contract;
-using Talabat.Core.Services.Contract;
 using Talabat.Repository;
+using Talabat.Core.Services.Contract;
 using Talabat.Service.AuthService;
-
+using Talabat.Core;
+using Talabat.Service.OrderService;
+using Talabat.Service.ProductService;
+using Microsoft.AspNetCore.Identity;
+using Talabat.Core.Identity;
+using Talabat.Repository.Identity;
+using Talabat.Service.PaymentService;
+using Talabat.Service.CasheService;
 
 namespace Talabat.APIs.Extensions
 {
-    public static class ApplicationServicesExtension
-    {
-        public static IServiceCollection AddApplicationServices(this IServiceCollection services)
-        {
-            services.AddScoped<IOrderService, OrderService>();
+	public static class ApplicationServicesExtension
+	{
+		public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+		{
 
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
+			services.AddSingleton(typeof(IResponseCashService), typeof(ResponseCasheService));
 
-            services.AddScoped<IBasketRepository, BasketRepository>();
+			services.AddScoped(typeof(IPaymentService), typeof(PaymentService));
 
-            services.AddAutoMapper(typeof(MappingProfiles));
+			services.AddScoped<IProductService, ProductService>();
 
-            services.AddScoped<ExceptionMiddleware>();
+			services.AddScoped<IOrderService, OrderService>();
 
-            services.Configure<ApiBehaviorOptions>(options =>
-            {
-                options.InvalidModelStateResponseFactory = (actionContext) =>
-                {
+			services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-                    var errors = actionContext.ModelState
-                                                   .Where(P => P.Value.Errors.Count > 0)
-                                                   .SelectMany(P => P.Value.Errors)
-                                                   .Select(E => E.ErrorMessage)
-                                                   .ToList();
-                    var response = new ApiValidationErrorResponse() { Errors = errors };
+			services.AddScoped<IBasketRepository, BasketRepository>();
 
-                    return new BadRequestObjectResult(response);
-                };
-            });
+			services.AddAutoMapper(typeof(MappingProfile));
 
-            return services;
-        }
+			services.AddScoped<ExceptionMiddleware>();
 
-        public static IServiceCollection AddAuthServices(this IServiceCollection services, IConfiguration configuration)
-        {
+			services.Configure<ApiBehaviorOptions>(options =>
+			{
+				options.InvalidModelStateResponseFactory = (actionContext) =>
+				{
 
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters()
-                {
-                    ValidateIssuer = true,
-                    ValidIssuer = configuration["JWT:ValidIssuer"],
-                    ValidateAudience = true,
-                    ValidAudience = configuration["JWT:ValidAudience"],
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:AuthKey"] ?? string.Empty)),
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.Zero
-                };
-            });
+					var errors = actionContext.ModelState
+												   .Where(P => P.Value.Errors.Count > 0)
+												   .SelectMany(P => P.Value.Errors)
+												   .Select(E => E.ErrorMessage)
+												   .ToList();
+					var response = new ApiValidationErrorResponse() { Errors = errors };
 
-            services.AddScoped(typeof(IAuthService), typeof(AuthService));
+					return new BadRequestObjectResult(response);
+				};
+			});
 
-            return services;
+			return services;
+		}
 
-        }
-    }
+		public static IServiceCollection AddAuthServices(this IServiceCollection services, IConfiguration configuration)
+		{
+
+			services.AddIdentity<ApplicationUser, IdentityRole>()
+					.AddEntityFrameworkStores<ApplicationIdentityDbContext>();
+
+			services.AddAuthentication(options =>
+			{
+				options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+				options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+			}).AddJwtBearer(options =>
+				{
+					options.TokenValidationParameters = new TokenValidationParameters()
+					{
+						ValidateIssuer = true,
+						ValidIssuer = configuration["JWT:ValidIssuer"],
+						ValidateAudience = true,
+						ValidAudience = configuration["JWT:ValidAudience"],
+						ValidateIssuerSigningKey = true,
+						IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:AuthKey"] ?? string.Empty)),
+						ValidateLifetime = true,
+						ClockSkew = TimeSpan.Zero
+					};
+				});
+
+			services.AddScoped(typeof(IAuthService), typeof(AuthService));
+
+			return services;
+
+		}
+	}
 }
